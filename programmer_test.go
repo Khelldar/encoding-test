@@ -2,42 +2,63 @@ package people
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
-func TestName(t *testing.T) {
-
+func TestProgrammerEncoding(t *testing.T) {
+	var testPass, testTotal int
 	goodDataTests := []struct {
-		data  string
-		prop  string
-		value interface{}
+		data          string
+		prop          string
+		value         interface{}
+		expectedError bool
 	}{
-		{`{"name": "Jon Dancy"}`, "name", "Jon Dancy"},
-		{`{"birthDay": "7/5/1986"}`, "birthDay", "7/5/1986"},
-		{`{"favoriteLanguage": "go"}`, "favoriteLanguage", "Go"},
-		{`{"favoriteLanguage": "Go"}`, "favoriteLanguage", "Go"},
-		{`{"favoriteLanguage": "Go"}`, "favoriteLanguage", "Go"},
-		{`{"favoriteLanguage": "javascript"}`, "favoriteLanguage", "JavaScript"},
-		{`{"favoriteLanguage": "JaVAsCripT"}`, "favoriteLanguage", "JavaScript"},
-		{`{"lastScore": 5}`, "lastScore", 5},
-		{`{"lastScore": null}`, "lastScore", nil},
+		{`{"name": "Jon Dancy"}`, "name", "Jon Dancy", false},
+		{`{"birthday": "7/25/1986"}`, "birthday", "7/25/1986", false},
+		{`{"favoriteLanguage": "go"}`, "favoriteLanguage", "Go", false},
+		{`{"favoriteLanguage": "Go"}`, "favoriteLanguage", "Go", false},
+		{`{"favoriteLanguage": "Go"}`, "favoriteLanguage", "Go", false},
+		{`{"favoriteLanguage": "javascript"}`, "favoriteLanguage", "JavaScript", false},
+		{`{"favoriteLanguage": "JaVAsCripT"}`, "favoriteLanguage", "JavaScript", false},
+		{`{"lastScore": 5}`, "lastScore", float64(5), false},
+		{`{"lastScore": 0}`, "lastScore", float64(0), false},
+		{`{"lastScore": null}`, "lastScore", nil, false},
+		{`{"name": false}`, "", nil, true},
+		{`{"birthday": "7/25/1986-it was pretty sunny that day"}`, "", nil, true},
+		{`{"favoriteLanguage": "pearl"}`, "", nil, true},
+		{`{"favoriteLanguage": 0}`, "", nil, true},
+		{`{"lastScore": -1}`, "", nil, true},
 	}
 
 	for _, test := range goodDataTests {
+		testTotal++
 		var p Programmer
 		var in, out []byte
 		var err error
 
 		in = []byte(test.data)
 		err = json.Unmarshal(in, &p)
-		if err != nil {
+
+		//got an error when we shouldn't have
+		if err != nil && !test.expectedError {
 			t.Errorf("failed to deserialize:\n%v\nError: %v", test.data, err.Error())
 			continue
 		}
 
-		out, err = json.Marshal(p)
+		if err == nil && test.expectedError {
+			t.Errorf("expected to see an error given this bad input:\n %v", test.data)
+			continue
+		}
+
+		if err != nil && test.expectedError {
+			testPass++
+			continue
+		}
+
+		out, err = json.Marshal(&p)
 		if err != nil {
-			t.Error("Serialization failed.  This should not happen in any test.")
+			t.Error("Serialization failed.  This should not happen in any test. Error: ", err)
 			continue
 		}
 
@@ -50,37 +71,14 @@ func TestName(t *testing.T) {
 
 		if tester[test.prop] != test.value {
 			t.Errorf("%v data was modified with input of:\n%v\n'%v' should be '%v' but deserialized into '%v'\nfull dump of deserialized data:\n%v", test.prop, test.data, test.prop, test.value, tester[test.prop], string(out))
-
+			continue
 		}
+		testPass++
 	}
 
-	// t.Run("name is good", func(t *testing.T) {
-	// 	in = []byte(`{"name": "Jon Dancy"}`)
-
-	// 	err = json.Unmarshal(in, &p)
-	// 	checkDeserialize(t, err, in)
-
-	// 	out, err = json.Marshal(p)
-	// 	checkSerialize(t, err, out)
-	// })
-
-	// t.Run("name is bad", func(t *testing.T) {
-	// 	in = []byte(`{"name": 123}`)
-
-	// 	err = json.Unmarshal(in, &p)
-	// 	return
-	// })
+	fmt.Printf("%v/%v good input tests passing.\n", testPass, testTotal)
+	if testPass != testTotal {
+		fmt.Printf("Failing tests:\n")
+	}
 
 }
-
-// func checkDeserialize(t *testing.T, err error, in []byte) {
-// 	if err != nil {
-// 		t.Error(string(in), "should not have failed to deserialize")
-// 	}
-// }
-
-// func checkSerialize(t *testing.T, err error, out []byte) {
-// 	if err != nil {
-// 		t.Error(string(out), "should not have failed to serialize")
-// 	}
-// }

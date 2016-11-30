@@ -15,5 +15,4 @@ const (
 	Go Language = iota
 	JavaScript
 	CSharp
-	CPlusPlus
 )
