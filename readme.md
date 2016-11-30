@@ -3,8 +3,8 @@ Let's solve a real world problem with Go to learn a bit more about the language.
 
 The rules:
 - no external packages
-- make no changes to programmer_test.go
-- you can change anything in programmer.go (including the Programmer struct)
+- make no changes to `programmer_test.go`
+- you can change anything in `programmer.go` (including the Programmer struct), but you do need a Programmer struct
 - after cloning down the repo, just run `go test` to run tests
 
 ## The Problem
